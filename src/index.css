@@ -21,3 +21,18 @@ body {
 .bg-light {
   background-color: #f1f5f9;
 }
+.text-muted-foreground {
+  color: #6b7280;
+}
+.text-primary {
+  color: #2563eb;
+}
+.text-primary-dull {
+  color: #1f58d8;
+}
+.text-light {
+  color: #f1f5f9;
+}
+.border-borderColor {
+  border-color: #e5e7eb;
+}
