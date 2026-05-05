@@ -1,26 +1,210 @@
 import User from '../models/User.js';
+import fs from 'fs';
+import imagekit from '../configs/imagekit.js';
+import Car from '../models/Car.js';
+import Booking from '../models/booking.js';
+import { log } from 'console';
 
 
-export const changeRoleToOwner=async(req,res)=>{
-    try{
-        const {_id}=req.user;
-        await User.findByIdAndUpdate(_id,{role:"owner"})
-        res.json({success:true,message:"Role changed to owner successfully"})
+export const changeRoleToOwner = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        await User.findByIdAndUpdate(_id, { role: "owner" })
+        res.json({ success: true, message: "Role changed to owner successfully" })
 
-    }catch(error){
+    } catch (error) {
         console.log(error.message);
-        res.json({success:false,message:"Error occurred while changing role"})
+        res.json({ success: false, message: "Error occurred while changing role" })
     }
 }
 
 
-export const addCar=async(req,res)=>{   
-    try{
-        const {_id}=req.user;
-        let car=JSON.parse(req.body.carData);
-        const imageFile=req.file;
-        
-    }catch(error){
-        
+export const addCar = async (req, res) => {
+    try {
+        const { _id } = req.user;
+
+        if (!req.body.carData) {
+            return res.status(400).json({ success: false, message: "Missing car data" });
+        }
+        let car = JSON.parse(req.body.carData);
+
+
+        const imageFile = req.file;
+        if (!imageFile) {
+            return res.status(400).json({ success: false, message: "Please upload an image" });
+        }
+
+
+        const fileBuffer = fs.readFileSync(imageFile.path);
+
+
+        const response = await imagekit.upload({
+            file: fileBuffer,
+            fileName: imageFile.originalname,
+            folder: "/cars"
+        });
+
+
+        const optimizedImageUrl = imagekit.url({
+            path: response.filePath,
+            transformation: [
+                {
+                    width: "1280",
+                    height: "720",
+                    cropMode: "maintain_ratio",
+                    quality: "80",
+                    format: "webp",
+                },
+            ],
+        });
+
+        await Car.create({
+            ...car,
+            owner: _id,
+            image: optimizedImageUrl,
+        });
+
+        if (fs.existsSync(imageFile.path)) {
+            fs.unlinkSync(imageFile.path);
+        }
+
+        res.json({ success: true, message: "Car added successfully", imageUrl: optimizedImageUrl });
+
+    } catch (error) {
+        console.error("Error Detail:", error);
+
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+export const getOwnerCars = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const cars = await Car.find({ owner: _id });
+        res.json({ success: true, cars })
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: "Error occurred while fetching cars" })
+    }
+}
+
+export const toggleCarAvailability = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const carId = req.body;
+        const car = await Car.findById(carId);
+        if (car.owner.toString() !== _id.toString()) {
+            return res.json({ success: false, message: "Unauthorized to toggle availability of this car" })
+        }
+        res.json({ success: true, cars })
+        car.isAvaliable = !car.isAvaliable;
+        await car.save();
+        res.json({ success: true, message: "Car availability toggled successfully" })
+
+    }
+    catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: "Error occurred while toggling car availability" })
+
+    }
+}
+
+
+export const deleteCar = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const carId = req.body;
+        const car = await Car.findById(carId);
+        if (car.owner.toString() !== _id.toString()) {
+            return res.json({ success: false, message: "Unauthorized to toggle availability of this car" })
+        }
+
+        car.owner = null;
+        car.isAvaliable = false;
+        await car.save();
+        res.json({ success: true, message: "Car deleted successfully" })
+
+    }
+    catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: "Error occurred while toggling car availability" })
+
+    }
+}
+
+
+export const getDashboardData = async (req, res) => {
+    try {
+        const { _id, role } = req.user;
+        if (role !== "owner") {
+            return res.json({ success: false, message: "Unauthorized to access dashboard data" })
+        }
+        const cars = await Car.find({ owner: _id });
+        const bookings = await Booking.find({ owner: _id }).populate("car").sort({ createdAt: -1 });
+
+        const pendingBookings = await Booking.find({ owner: _id, status: "pending" });
+        const completedBookings = await Booking.find({ owner: _id, status: "confirmed" });
+
+        const monthlyRevenue = bookings.slice().filter(booking => booking.status === 'confirmed').reduce((acc, booking) => acc + booking.price, 0)
+
+        const dashboardData = {
+            totalCars: cars.length,
+            totalBookings: bookings.length,
+            pendingBookings: pendingBookings.length,
+            completedBookings: completedBookings.length,
+            recentBookings: bookings.slice(0, 3),
+            monthlyRevenue: monthlyRevenue
+        }
+        res.json({ success: true, dashboardData })
+    }
+    catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: "Error occurred while fetching dashboard data" })
+
+    }
+
+}
+
+export const updateUserImage = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const imageFile = req.file;
+        if (!imageFile) {
+            return res.status(400).json({ success: false, message: "Please upload an image" });
+        }
+
+
+        const fileBuffer = fs.readFileSync(imageFile.path);
+
+
+        const response = await imagekit.upload({
+            file: fileBuffer,
+            fileName: imageFile.originalname,
+            folder: "/users"
+        });
+
+
+        const optimizedImageUrl = imagekit.url({
+            path: response.filePath,
+            transformation: [
+                {
+                    width: "400",
+                    quality: "auto",
+                    format: "webp",
+                },
+            ],
+        });
+        const image=optimizedImageUrl;
+        await User.findByIdAndUpdate(_id,{image});
+        res.json({ success: true, message: "User image updated successfully", imageUrl: optimizedImageUrl });
+    }
+    catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: "Error occurred while updating user image" })
     }
 }
