@@ -1,16 +1,17 @@
-# React + Vite
+SwiftKeys – Peer-to-Peer Car Rental & Management System (https://swiftkeeys.netlify.app/)
+SwiftKeys is a modern, full-stack web application designed to streamline vehicle rentals. It connects casual renters with car owners through an intuitive, data-driven interface. Built using the MERN stack, the platform simplifies the entire lifecycle of booking a vehicle—from discovery and real-time scheduling to comprehensive fleet management for vehicle owners.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Core Feactures
+👤 For Renters (Customer Portal)
+Smart Fleet Discovery: A dynamically filtered catalog featuring detailed vehicle profiles (CarCard.jsx), high-quality assets, pricing breakdown, and real-time availability metrics.
 
-Currently, two official plugins are available:
+Streamlined Booking Pipeline: An interactive booking framework designed to process reservation requests, calculate costs, and prevent scheduling conflicts.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Social Proof & Validation: Integrated feedback mechanisms (Testimonial.jsx) and dynamic newsletters (NewsLetter.jsx) to build platform trust and high conversion rates.
 
-## React Compiler
+For Car Owners (Admin Dashboard)
+Isolated Owner Workspace: A secure, robust workspace explicitly separated via modular routing architectures (components/owner/).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Fleet Management Hub: Granular control over the owner's vehicle listings. Owners can seamlessly add, edit, or remove cars, update base rates, and toggle availability statuses.
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Booking Analytics & Tracking: An interactive interface to review incoming rental requests, track current rentals, and oversee active reservation timelines at a glance.
